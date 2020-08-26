@@ -1,0 +1,53 @@
+import FreeCAD
+simplifiedSketches = FreeCAD.ActiveDocument.addObject('App::DocumentObjectGroup', 'SimplifiedSketches')
+for obj in FreeCAD.ActiveDocument.Objects:
+    if str(type(obj)) != "<class 'Sketcher.SketchObject'>" :
+        print("Ignore Object of type " + str(type(obj)) )
+        continue
+    # print( obj.Name )                               # display the object Name
+    objName = obj.Name
+    # obj = App.ActiveDocument.getObject(objName)
+    # Gui.Selection.addSelection(obj)                 # select the object
+    gc = obj.GeometryCount
+    print("Geometry count is " + str(gc))
+    foundshape = 0
+    geom = list()
+    gstart = list()
+    gend = list()
+    gtype = list()
+    i = 0
+    while i < gc :
+        foundshape = 1
+        geom.append( obj.Geometry[i])
+        gtype.append( str(type(geom[i])))
+        # print("geom ["+ str(i)+"] = " + str(dir(geom[i])) + " type "+ str(type(geom[i])) + "\n")
+        if gtype[i] == "<class 'Part.BSplineCurve'>" :
+            gstart.append(geom[i].StartPoint)
+            gend.append(geom[i].EndPoint)
+            # print ("Line start type is " + str(type(gstart[i])) + " line end type is " + str(type(gend[i])) + "\n")
+            gdegree = geom[i].Degree
+            # print ("Line degree is "+ str(gdegree)+"\n")
+            if gdegree != 1:
+                print("Degree is " + str(gdegree) + " not 1 - ignore")
+                foundshape = 0
+            # startl = gstart[i].Length
+            # endl = gend[i].Length
+            # diffl = abs(endl - startl)
+            # glen = geom[i].length()
+            # print ("type of glen is "+ str(type(glen)) + "length is " + str(glen) + "\n")
+        else:
+            print("type[" + str(i) + "] is " + gtype[i] + "\n")
+            foundshape = 0				
+        i = i + 1
+    if foundshape:
+        newName = obj.Name + 'new'
+        # App.activeDocument().addObject('PartDesign::Body','Body')
+        # mySketch1= App.activeDocument().Body.newObject('Sketcher::SketchObject','Sketch')
+        mySketch1 = FreeCAD.activeDocument().addObject('Sketcher::SketchObject',newName)
+        i = 0
+        while i < gc:
+            mySketch1.addGeometry(Part.LineSegment(gstart[i], gend[i]), False)
+            i = i + 1
+        # obj.Label = 'zz' + obj.Name
+        simplifiedSketches.addObject(obj)        
+        foundshape = 0
